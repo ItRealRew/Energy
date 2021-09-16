@@ -1,0 +1,60 @@
+CREATE PROCEDURE filldates @dateStart AS datetime, @dateEnd AS datetime
+AS
+      WHILE @dateStart <= @dateEnd BEGIN
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (1,1,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (1,2,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (2,1,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (2,2,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (3,1,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (3,2,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (4,1,RAND(CHECKSUM(NEWID())),@dateStart);
+        INSERT INTO [measuring_values] ([parameter_id],[meter_id],[value],[value_dt]) VALUES (4,2,RAND(CHECKSUM(NEWID())),@dateStart);
+        SET @dateStart = DATEADD(minute,30,@dateStart);
+      END
+GO
+
+DROP TABLE IF EXISTS [meters]
+CREATE TABLE [meters]
+(
+  [id] int IDENTITY(1,1),
+  [caption] varchar(255),
+   PRIMARY KEY ([id])
+)
+
+DROP TABLE IF EXISTS [parameters]
+CREATE TABLE [parameters]
+(
+  [id] int IDENTITY(1,1),
+  [caption] varchar(255),
+  [messure_units] varchar(255),
+   PRIMARY KEY ([id])
+)
+
+DROP TABLE IF EXISTS [measuring_values]
+CREATE TABLE [measuring_values]
+(
+  [id] int IDENTITY(1,1),
+  [parameter_id] int,
+  [meter_id] int,
+  [value] float,
+  [value_dt] datetime,
+  PRIMARY KEY ([id]),
+  CONSTRAINT FK_parameter FOREIGN KEY (parameter_id)
+        REFERENCES parameters (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+  CONSTRAINT FK_meter FOREIGN KEY (meter_id)
+        REFERENCES meters (id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+)
+GO
+
+INSERT INTO [meters] ([caption]) VALUES ('ПС Восточная, Фидер 1'),('ПС Восточная, Фидер 2');
+INSERT INTO [parameters] ([caption],[messure_units]) VALUES ('Активная, приём','кВт'),('Активная, отдача','кВт'),('Реактивная, приём','квар'),('Реактивная, отдача','квар');
+
+declare @d1 datetime = DATEADD(minute,30,DATEADD(m,-1,DATEADD(mm, DATEDIFF(m,0,GETDATE()), 0)))
+declare @d2 datetime = EOMONTH(DATEADD(m,1,GETDATE()))
+
+EXEC filldates @dateStart = @d1, @dateEnd = @d2
+
